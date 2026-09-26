@@ -191,3 +191,18 @@ table { width: 100%; border-collapse: collapse; }
 .kind-double, .kind-triple { color: var(--over); font-weight: 700; }
 .sc td { height: 30px; }
 .sc .mark { font-size: 12px; }
+
+.tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 2px; }
+.tag.ok { background: var(--green-soft); color: var(--green-dark); }
+.tag.wd { background: #eee; color: var(--muted); }
+.lb tr.wd td { color: var(--muted); }
+.lb tr.wd .net { color: var(--muted); }
+.lb .sub { color: var(--green); font-weight: 800; }
+.awards .award { padding: 10px 0; border-top: 1px solid var(--line); }
+.awards .award-winners { margin-top: 2px; }
+.champ { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 8px; padding: 14px 0; border-top: 1px solid var(--line); text-decoration: none; color: var(--text); }
+.champ:first-child { border-top: none; }
+.champ-year { font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 700; color: var(--green-dark); }
+.champ-name { font-weight: 700; }
+.lb tr.wd .topar { color: var(--muted); }
+.awards .award .spread > span { white-space: nowrap; }

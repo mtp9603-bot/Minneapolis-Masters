@@ -4,7 +4,7 @@ import type { Score } from "@/lib/scoring";
 import { ScoreMark, MarkLegend } from "./ScoreMark";
 
 /** Hole-by-hole breakdown: score, drinks, and net (strokes − drinks) per hole, with subtotals. */
-export function HoleDetail({ playerId, preRound, scores }: { playerId: string; preRound: number; scores: Score[] }) {
+export function HoleDetail({ playerId, preRound, scores }: { playerId?: string; preRound: number; scores: Score[] }) {
   const byHole = new Map(scores.map((s) => [s.hole, s]));
 
   const sum = (from: number, to: number) => {
@@ -84,9 +84,11 @@ export function HoleDetail({ playerId, preRound, scores }: { playerId: string; p
         </tbody>
       </table>
       <MarkLegend />
-      <Link href={`/player/${playerId}`} className="small">
-        Full scorecard ›
-      </Link>
+      {playerId && (
+        <Link href={`/player/${playerId}`} className="small">
+          Full scorecard ›
+        </Link>
+      )}
     </div>
   );
 }

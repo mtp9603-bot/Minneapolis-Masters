@@ -25,7 +25,7 @@ export default async function CardPage({ params }: { params: Promise<{ token: st
   }
 
   const [player, scores, settings] = await Promise.all([
-    db().from("players").select("id, name, pre_round_drinks").eq("id", tok.player_id).single(),
+    db().from("players").select("id, name, pre_round_drinks, withdrawn, submitted_at").eq("id", tok.player_id).single(),
     db().from("scores").select("player_id, hole, strokes, drinks").eq("player_id", tok.player_id),
     db().from("settings").select("pre_round_max, locked").eq("id", 1).single(),
   ]);

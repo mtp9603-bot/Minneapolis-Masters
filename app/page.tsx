@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { JoinForm } from "@/components/JoinForm";
 import { COURSE_NAME, COURSE_SUB, TOTAL_PAR, TOTAL_YARDS } from "@/lib/course";
 
@@ -18,6 +19,9 @@ export default function Home() {
         </div>
       </div>
       <JoinForm />
+      <p className="center small">
+        <Link href="/leaderboard">Leaderboard</Link> · <Link href="/history">Past Champions</Link>
+      </p>
       <div className="card small muted">
         <b>How scoring works.</b> Gross is total strokes. Every drink (pre-round plus each hole) takes one stroke
         off. Lowest net wins. Ties go to the player with more drinks, then countback from hole 18. Pre-round

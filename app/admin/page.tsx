@@ -17,12 +17,13 @@ export default async function AdminPage() {
     );
   }
 
-  const [settings, cfg, players, tokens, scores] = await Promise.all([
+  const [settings, cfg, players, tokens, scores, archives] = await Promise.all([
     db().from("settings").select("pre_round_max, locked").eq("id", 1).single(),
     db().from("private_config").select("join_code").eq("id", 1).single(),
-    db().from("players").select("id, name, pre_round_drinks").order("name"),
+    db().from("players").select("id, name, pre_round_drinks, withdrawn, submitted_at").order("name"),
     db().from("player_tokens").select("player_id, token"),
     db().from("scores").select("player_id, hole, strokes, drinks"),
+    db().from("archives").select("year, archived_at").order("year", { ascending: false }),
   ]);
 
   const tokenBy = new Map((tokens.data ?? []).map((t) => [t.player_id as string, t.token as string]));
@@ -34,6 +35,7 @@ export default async function AdminPage() {
         joinCode={cfg.data?.join_code ?? ""}
         players={(players.data ?? []).map((p) => ({ ...p, token: tokenBy.get(p.id) ?? "" }))}
         scores={(scores.data ?? []) as ScoreRow[]}
+        archives={(archives.data ?? []) as { year: number; archived_at: string }[]}
       />
     </main>
   );

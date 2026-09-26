@@ -1,7 +1,7 @@
 import { PARS } from "./course";
 
 export type Score = { hole: number; strokes: number | null; drinks: number };
-export type Player = { id: string; name: string; pre_round_drinks: number };
+export type Player = { id: string; name: string; pre_round_drinks: number; withdrawn?: boolean };
 
 export type Totals = {
   gross: number;
@@ -65,7 +65,7 @@ function sameNet(a: Totals, b: Totals) {
 /**
  * Rank players. Lowest net wins. Mid-round, players are compared by net relative to par
  * for holes played, which gives the same order as raw net once everyone has finished.
- * Players with no holes entered go to the bottom.
+ * Players with no holes entered go to the bottom, then withdrawn players (position "WD").
  */
 export function buildLeaderboard(players: Player[], scores: (Score & { player_id: string })[]): Row[] {
   const byPlayer = new Map<string, Score[]>();
@@ -74,7 +74,9 @@ export function buildLeaderboard(players: Player[], scores: (Score & { player_id
     list.push(s);
     byPlayer.set(s.player_id, list);
   }
-  const rows = players.map((p) => ({ ...p, ...computeTotals(p.pre_round_drinks, byPlayer.get(p.id) ?? []) }));
+  const all = players.map((p) => ({ ...p, ...computeTotals(p.pre_round_drinks, byPlayer.get(p.id) ?? []) }));
+  const rows = all.filter((r) => !r.withdrawn);
+  const withdrawn = all.filter((r) => r.withdrawn).sort((a, b) => a.name.localeCompare(b.name));
 
   rows.sort((a, b) => {
     if ((a.thru === 0) !== (b.thru === 0)) return a.thru === 0 ? 1 : -1;
@@ -104,6 +106,7 @@ export function buildLeaderboard(players: Player[], scores: (Score & { player_id
       wonTiebreak,
     });
   }
+  for (const r of withdrawn) out.push({ ...r, position: "WD", wonTiebreak: null });
   return out;
 }
 

@@ -1,6 +1,8 @@
--- Minneapolis Masters: run this once in Supabase -> SQL Editor.
--- Safe to re-run: it drops and recreates everything (all scores are lost).
+-- Minneapolis Masters: run this once in Supabase -> SQL Editor for a NEW project.
+-- WARNING: re-running drops and recreates everything, including Past Champions.
+-- Already set up? Run the files in supabase/migrations/ instead.
 
+drop table if exists archives cascade;
 drop table if exists scores cascade;
 drop table if exists player_tokens cascade;
 drop table if exists players cascade;
@@ -28,6 +30,8 @@ create table players (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(name) between 1 and 40),
   pre_round_drinks int not null default 0 check (pre_round_drinks between 0 and 2),
+  withdrawn boolean not null default false,
+  submitted_at timestamptz,
   created_at timestamptz not null default now()
 );
 create unique index players_name_unique on players (lower(name));
@@ -48,6 +52,14 @@ create table scores (
   constraint last_two_holes_one_drink check (hole < 17 or drinks <= 1)
 );
 
+-- One row per year: final standings and awards, saved before each reset.
+create table archives (
+  year int primary key check (year between 2000 and 2100),
+  archived_at timestamptz not null default now(),
+  standings jsonb not null,
+  awards jsonb not null
+);
+
 -- Row Level Security: the browser may only READ public tables.
 -- All writes go through the Next.js server using the secret key.
 alter table settings enable row level security;
@@ -55,15 +67,17 @@ alter table private_config enable row level security;
 alter table players enable row level security;
 alter table player_tokens enable row level security;
 alter table scores enable row level security;
+alter table archives enable row level security;
 
 create policy "public read settings" on settings for select using (true);
 create policy "public read players" on players for select using (true);
 create policy "public read scores" on scores for select using (true);
+create policy "public read archives" on archives for select using (true);
 -- No policies on private_config or player_tokens = no browser access at all.
 
-grant select on settings, players, scores to anon, authenticated;
+grant select on settings, players, scores, archives to anon, authenticated;
 revoke all on private_config, player_tokens from anon, authenticated;
-grant all on settings, private_config, players, player_tokens, scores to service_role;
+grant all on settings, private_config, players, player_tokens, scores, archives to service_role;
 
 -- Turn on realtime for the live leaderboard.
 alter publication supabase_realtime add table settings, players, scores;

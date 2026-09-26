@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/supabase-server";
 import { ADMIN_COOKIE, adminCookieValue, passwordMatches, requireAdmin } from "@/lib/admin-auth";
 import { validateHole } from "@/lib/validate";
+import { buildSnapshot } from "@/lib/archive";
+import type { PlayerRow, ScoreRow } from "@/lib/types";
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -76,10 +78,61 @@ export async function deletePlayer(id: string): Promise<Result> {
   return { ok: true };
 }
 
-/** Wipes all players and scores, unlocks scoring, and resets pre-round limit to 1. */
-export async function resetTournament(confirm: string): Promise<Result> {
+export async function setSubmitted(id: string, submitted: boolean): Promise<Result> {
   await requireAdmin();
-  if (confirm !== "RESET") return { ok: false, error: 'Type RESET to confirm.' };
+  const { error } = await db()
+    .from("players")
+    .update({ submitted_at: submitted ? new Date().toISOString() : null })
+    .eq("id", id);
+  if (error) return { ok: false, error: "Update failed." };
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function setWithdrawn(id: string, withdrawn: boolean): Promise<Result> {
+  await requireAdmin();
+  const { error } = await db().from("players").update({ withdrawn }).eq("id", id);
+  if (error) return { ok: false, error: "Update failed." };
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+async function saveArchive(year: number): Promise<Result> {
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) return { ok: false, error: "Enter a valid year." };
+  const [players, scores] = await Promise.all([
+    db().from("players").select("id, name, pre_round_drinks, withdrawn"),
+    db().from("scores").select("player_id, hole, strokes, drinks"),
+  ]);
+  if (players.error || scores.error) return { ok: false, error: "Couldn't read scores." };
+  if (!players.data?.length) return { ok: false, error: "There are no players to save." };
+  const snap = buildSnapshot(players.data as PlayerRow[], scores.data as ScoreRow[]);
+  const { error } = await db()
+    .from("archives")
+    .upsert({ year, archived_at: new Date().toISOString(), standings: snap.standings, awards: snap.awards });
+  if (error) return { ok: false, error: "Saving to Past Champions failed." };
+  revalidatePath("/history");
+  return { ok: true };
+}
+
+/** Save (or re-save) this year's final standings to Past Champions. */
+export async function archiveYear(year: number): Promise<Result> {
+  await requireAdmin();
+  const res = await saveArchive(year);
+  if (res.ok) revalidatePath("/admin");
+  return res;
+}
+
+/**
+ * Wipes all players and scores, unlocks scoring, and resets pre-round limit to 1.
+ * When archiveAs is a year, results are saved to Past Champions first; if that fails, nothing is deleted.
+ */
+export async function resetTournament(confirm: string, archiveAs: number | null): Promise<Result> {
+  await requireAdmin();
+  if (confirm !== "RESET") return { ok: false, error: "Type RESET to confirm." };
+  if (archiveAs != null) {
+    const saved = await saveArchive(archiveAs);
+    if (!saved.ok && saved.error !== "There are no players to save.") return saved;
+  }
   const { error } = await db().from("players").delete().not("id", "is", null);
   if (error) return { ok: false, error: "Reset failed." };
   await db().from("settings").update({ locked: false, pre_round_max: 1, updated_at: new Date().toISOString() }).eq("id", 1);

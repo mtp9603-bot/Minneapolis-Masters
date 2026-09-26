@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { savePreRound, saveHole } from "@/app/actions";
+import { savePreRound, saveHole, submitCard } from "@/app/actions";
+import { loadOutbox, storeOutbox, type Outbox, type OutboxValue } from "@/lib/outbox";
 import { MAX_STROKES, MIN_STROKES, PARS, YARDS, holeDrinkCap } from "@/lib/course";
 import { computeTotals, formatToPar } from "@/lib/scoring";
 import { browserDb } from "@/lib/supabase-browser";
@@ -37,71 +38,121 @@ export function CardClient(props: {
     return 19;
   });
 
-  // ---- Autosave: debounce per field, flush when changing holes ----
-  const pending = useRef(new Map<string, { timer: ReturnType<typeof setTimeout>; run: () => void }>());
-  const [inflight, setInflight] = useState(0);
+  // ---- Autosave with an on-phone outbox ----
+  // Every change goes into the outbox (also saved to localStorage) and is sent shortly after.
+  // If the network fails, it stays there and is retried until it lands.
+  const outbox = useRef<Outbox>({});
+  const sending = useRef(false);
+  const again = useRef(false);
+  const sendTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [waiting, setWaiting] = useState(0);
+  const [offline, setOffline] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [status, setStatus] = useState({ submitted: !!player.submitted_at, withdrawn: !!player.withdrawn });
 
-  const run = useCallback(async (fn: () => Promise<{ ok: boolean; error?: string }>) => {
-    setInflight((n) => n + 1);
-    try {
-      const res = await fn();
-      setSaveError(res.ok ? "" : res.error ?? "Save failed.");
-    } catch {
-      setSaveError("Couldn't reach the server. Check your signal and tap again.");
-    } finally {
-      setInflight((n) => n - 1);
+  const persist = useCallback(() => {
+    storeOutbox(token, outbox.current);
+    setWaiting(Object.keys(outbox.current).length);
+  }, [token]);
+
+  const sendAll = useCallback(async () => {
+    if (sending.current) {
+      again.current = true;
+      return;
     }
-  }, []);
+    sending.current = true;
+    try {
+      for (const [k, v] of Object.entries(outbox.current)) {
+        let res: { ok: boolean; error?: string };
+        try {
+          res = "pre" in v ? await savePreRound(token, v.pre) : await saveHole(token, Number(k.slice(1)), v.strokes, v.drinks);
+        } catch {
+          // Network problem: keep everything and try again soon.
+          setOffline(true);
+          if (sendTimer.current) clearTimeout(sendTimer.current);
+          sendTimer.current = setTimeout(sendAll, 5000);
+          return;
+        }
+        setOffline(false);
+        // Saved, or rejected by the server (e.g. scoring locked). Either way it's done, unless it changed meanwhile.
+        if (JSON.stringify(outbox.current[k]) === JSON.stringify(v)) delete outbox.current[k];
+        setSaveError(res.ok ? "" : res.error ?? "Save failed.");
+        persist();
+      }
+    } finally {
+      sending.current = false;
+      if (again.current) {
+        again.current = false;
+        sendAll();
+      }
+    }
+  }, [token, persist]);
 
-  const schedule = useCallback(
-    (key: string, fn: () => Promise<{ ok: boolean; error?: string }>) => {
-      const existing = pending.current.get(key);
-      if (existing) clearTimeout(existing.timer);
-      const exec = () => {
-        pending.current.delete(key);
-        run(fn);
-      };
-      pending.current.set(key, { timer: setTimeout(exec, 400), run: exec });
+  const enqueue = useCallback(
+    (k: string, v: OutboxValue) => {
+      outbox.current[k] = v;
+      persist();
+      if (sendTimer.current) clearTimeout(sendTimer.current);
+      sendTimer.current = setTimeout(sendAll, 400);
     },
-    [run],
+    [persist, sendAll],
   );
 
   const flush = useCallback(() => {
-    for (const p of [...pending.current.values()]) {
-      clearTimeout(p.timer);
-      p.run();
-    }
-  }, []);
+    if (sendTimer.current) clearTimeout(sendTimer.current);
+    if (Object.keys(outbox.current).length) sendAll();
+  }, [sendAll]);
 
+  // On load: restore anything that didn't make it last time, then send it.
   useEffect(() => {
     saveToken(token);
-    const onHide = () => document.visibilityState === "hidden" && flush();
-    document.addEventListener("visibilitychange", onHide);
-    return () => document.removeEventListener("visibilitychange", onHide);
-  }, [token, flush]);
+    const box = loadOutbox(token);
+    outbox.current = box;
+    if (Object.keys(box).length) {
+      setHoles((h) => {
+        const next = { ...h };
+        for (const [k, v] of Object.entries(box)) if (!("pre" in v)) next[Number(k.slice(1))] = v;
+        return next;
+      });
+      const pre = box.pre;
+      if (pre && "pre" in pre) setPre(pre.pre);
+      persist();
+      sendAll();
+    }
+    const onVis = () => flush();
+    window.addEventListener("online", flush);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("online", flush);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [token, flush, persist, sendAll]);
 
-  // Live settings (lock / pre-round limit) from the admin.
+  // Live settings (lock / pre-round limit) and this player's status from the admin.
   useEffect(() => {
     const ch = browserDb()
-      .channel("card-settings")
+      .channel(`card-${player.id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "settings" }, (payload) => {
         const s = payload.new as Settings;
         setSettings({ pre_round_max: s.pre_round_max, locked: s.locked });
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "players", filter: `id=eq.${player.id}` }, (payload) => {
+        const p = payload.new as PlayerRow;
+        setStatus({ submitted: !!p.submitted_at, withdrawn: !!p.withdrawn });
       })
       .subscribe();
     return () => {
       browserDb().removeChannel(ch);
     };
-  }, []);
+  }, [player.id]);
 
-  const locked = settings.locked;
+  const locked = settings.locked || status.submitted || status.withdrawn;
 
   function setPreRound(v: number) {
     if (locked) return;
     const next = Math.max(0, Math.min(settings.pre_round_max, v));
     setPre(next);
-    schedule("pre", () => savePreRound(token, next));
+    enqueue("pre", { pre: next });
   }
 
   function setHole(hole: number, patch: Partial<HoleState>) {
@@ -109,7 +160,7 @@ export function CardClient(props: {
     const cur = holes[hole] ?? { strokes: null, drinks: 0 };
     const next = { ...cur, ...patch };
     setHoles((h) => ({ ...h, [hole]: next }));
-    schedule(`h${hole}`, () => saveHole(token, hole, next.strokes, next.drinks));
+    enqueue(`h${hole}`, next);
   }
 
   function go(to: number) {
@@ -120,7 +171,31 @@ export function CardClient(props: {
 
   const scoreList = Object.entries(holes).map(([h, s]) => ({ hole: Number(h), ...s }));
   const totals = computeTotals(pre, scoreList);
-  const saveLabel = saveError ? "" : inflight > 0 || pending.current.size > 0 ? "Saving…" : "All changes saved";
+  const saveLabel = offline
+    ? `No signal · ${waiting} change${waiting === 1 ? "" : "s"} saved on this phone`
+    : waiting > 0
+      ? "Saving…"
+      : saveError
+        ? ""
+        : "All changes saved";
+  const holesDone = scoreList.filter((s) => s.strokes != null).length;
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  async function submit() {
+    if (!window.confirm("Submit your card? You won't be able to change it after this.")) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await submitCard(token);
+      if (res.ok) setStatus((s) => ({ ...s, submitted: true }));
+      else setSubmitError(res.error);
+    } catch {
+      setSubmitError("No signal. Try again in a moment.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <>
@@ -148,7 +223,13 @@ export function CardClient(props: {
           <b>{player.name}</b>
           <span className="save-state">{saveLabel}</span>
         </div>
-        {locked && <div className="banner">Scoring is locked. The round is over.</div>}
+        {status.withdrawn ? (
+          <div className="banner">You&apos;re marked as withdrawn. See the organizer if that&apos;s wrong.</div>
+        ) : status.submitted ? (
+          <div className="banner">Card submitted. Ask the organizer if something needs fixing.</div>
+        ) : settings.locked ? (
+          <div className="banner">Scoring is locked. The round is over.</div>
+        ) : null}
         {saveError && <div className="banner error">{saveError}</div>}
 
         {step === 0 && (
@@ -177,6 +258,22 @@ export function CardClient(props: {
           <div className="card stack">
             <h2>Your card</h2>
             <Scorecard preRound={pre} scores={scoreList} />
+            {!locked &&
+              (holesDone === 18 ? (
+                <>
+                  <button className="btn block" onClick={submit} disabled={submitting || waiting > 0}>
+                    {submitting ? "Submitting…" : waiting > 0 ? "Waiting for signal to save…" : "Submit card"}
+                  </button>
+                  <p className="small muted center" style={{ margin: 0 }}>
+                    Check every hole first. Once submitted, only the organizer can change it.
+                  </p>
+                </>
+              ) : (
+                <p className="small muted center" style={{ margin: 0 }}>
+                  {18 - holesDone} hole{18 - holesDone === 1 ? "" : "s"} left before you can submit your card.
+                </p>
+              ))}
+            {submitError && <div className="error center">{submitError}</div>}
             <div className="navbtns">
               <button className="btn secondary" onClick={() => go(18)}>
                 ‹ Hole 18

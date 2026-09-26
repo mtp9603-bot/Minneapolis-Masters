@@ -7,6 +7,9 @@ import { buildLeaderboard, describeTiebreak, formatToPar } from "@/lib/scoring";
 import { toParClass } from "@/lib/marks";
 import type { PlayerRow, ScoreRow } from "@/lib/types";
 import { HoleDetail } from "./HoleDetail";
+import { Awards } from "./Awards";
+import { computeAwards } from "@/lib/awards";
+import Link from "next/link";
 
 export function Leaderboard() {
   const [players, setPlayers] = useState<PlayerRow[]>([]);
@@ -20,7 +23,7 @@ export function Leaderboard() {
   const load = useCallback(async () => {
     const sb = browserDb();
     const [p, s, st] = await Promise.all([
-      sb.from("players").select("id, name, pre_round_drinks"),
+      sb.from("players").select("id, name, pre_round_drinks, withdrawn, submitted_at"),
       sb.from("scores").select("player_id, hole, strokes, drinks"),
       sb.from("settings").select("locked").eq("id", 1).single(),
     ]);
@@ -53,6 +56,8 @@ export function Leaderboard() {
   }, [load, reloadSoon]);
 
   const rows = useMemo(() => buildLeaderboard(players, scores), [players, scores]);
+  const awards = useMemo(() => computeAwards(players, scores), [players, scores]);
+  const submitted = useMemo(() => new Set(players.filter((p) => p.submitted_at).map((p) => p.id)), [players]);
 
   return (
     <>
@@ -80,13 +85,16 @@ export function Leaderboard() {
             <tbody>
               {rows.map((r) => (
                 <Fragment key={r.id}>
-                <tr className={`click ${open === r.id ? "open" : ""}`} onClick={() => setOpen(open === r.id ? null : r.id)}>
+                <tr className={`click ${open === r.id ? "open" : ""} ${r.withdrawn ? "wd" : ""}`} onClick={() => setOpen(open === r.id ? null : r.id)}>
                   <td className="pos">{r.position}</td>
                   <td>
                     <span className="name">{r.name}</span> <span className="chev">{open === r.id ? "▾" : "▸"}</span>
                     {r.wonTiebreak && <span className="tb">{describeTiebreak(r.wonTiebreak)}</span>}
                   </td>
-                  <td>{r.thru === 18 ? "F" : r.thru || "–"}</td>
+                  <td>
+                    {r.thru === 18 ? "F" : r.thru || "–"}
+                    {submitted.has(r.id) && <span className="sub" title="Card submitted"> ✓</span>}
+                  </td>
                   <td>{r.thru ? r.gross : "–"}</td>
                   <td>{r.drinks}</td>
                   <td>
@@ -107,9 +115,13 @@ export function Leaderboard() {
           </table>
         )}
       </div>
+      <Awards awards={awards} final={locked} />
+      <p className="small muted">
+        <Link href="/history">Past Champions ›</Link>
+      </p>
       <p className="small muted">
         Lowest net wins. Mid-round, players are ranked by net relative to par for the holes they've played. Ties: more
-        drinks, then countback from hole 18. Tap a name for hole-by-hole detail.
+        drinks, then countback from hole 18. Tap a name for hole-by-hole detail. ✓ means the player submitted their card.
       </p>
     </>
   );
