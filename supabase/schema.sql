@@ -56,6 +56,7 @@ create table scores (
 create table archives (
   year int primary key check (year between 2000 and 2100),
   archived_at timestamptz not null default now(),
+  champion_name text,
   standings jsonb not null,
   awards jsonb not null
 );
@@ -81,3 +82,11 @@ grant all on settings, private_config, players, player_tokens, scores, archives 
 
 -- Turn on realtime for the live leaderboard.
 alter publication supabase_realtime add table settings, players, scores;
+
+-- Past champions from before the app (no scorecards on record).
+insert into archives (year, champion_name, standings, awards) values
+  (2023, 'Bo Hellquist', '[]', '[]'),
+  (2024, 'Logan Neisinger', '[]', '[]'),
+  (2025, 'Dan Hastings', '[]', '[]'),
+  (2026, 'Ryan Punch', '[]', '[]')
+on conflict (year) do nothing;

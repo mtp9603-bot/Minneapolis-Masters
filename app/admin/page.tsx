@@ -23,7 +23,7 @@ export default async function AdminPage() {
     db().from("players").select("id, name, pre_round_drinks, withdrawn, submitted_at").order("name"),
     db().from("player_tokens").select("player_id, token"),
     db().from("scores").select("player_id, hole, strokes, drinks"),
-    db().from("archives").select("year, archived_at").order("year", { ascending: false }),
+    db().from("archives").select("year, archived_at, champion_name, standings").order("year", { ascending: false }),
   ]);
 
   const tokenBy = new Map((tokens.data ?? []).map((t) => [t.player_id as string, t.token as string]));
@@ -35,7 +35,11 @@ export default async function AdminPage() {
         joinCode={cfg.data?.join_code ?? ""}
         players={(players.data ?? []).map((p) => ({ ...p, token: tokenBy.get(p.id) ?? "" }))}
         scores={(scores.data ?? []) as ScoreRow[]}
-        archives={(archives.data ?? []) as { year: number; archived_at: string }[]}
+        archives={(archives.data ?? []).map((a) => ({
+          year: a.year as number,
+          champion: (a.champion_name as string | null) ?? "",
+          manual: !(a.standings as unknown[])?.length,
+        }))}
       />
     </main>
   );

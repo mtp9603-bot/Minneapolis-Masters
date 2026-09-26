@@ -21,7 +21,7 @@ export default async function EditPlayerPage({ params }: { params: Promise<{ id:
   const { data: scores } = await db().from("scores").select("player_id, hole, strokes, drinks").eq("player_id", id);
   return (
     <main className="wrap">
-      <Link href="/admin" className="small">
+      <Link href="/admin" className="back">
         ‹ Admin
       </Link>
       <PlayerEditor player={player} scores={(scores ?? []) as ScoreRow[]} />

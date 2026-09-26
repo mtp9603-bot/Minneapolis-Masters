@@ -22,12 +22,26 @@ export default async function ArchiveYearPage({ params }: { params: Promise<{ ye
   const a = data as Archive;
   return (
     <main className="wrap">
-      <Link href="/history" className="small">
+      <Link href="/history" className="back">
         ‹ Past Champions
       </Link>
-      <h1>{a.year} Final Results</h1>
-      <ArchiveStandings standings={a.standings} />
-      <Awards awards={a.awards} final />
+      <div className="eyebrow">Final results</div>
+      <h1>{a.year} Minneapolis Masters</h1>
+      {a.standings.length === 0 ? (
+        <div className="reigning static">
+          <div className="reigning-medal">
+            <img src="/logo.png" alt="" />
+          </div>
+          <div className="eyebrow light">{a.year} champion</div>
+          <div className="reigning-name">{a.champion_name ?? "—"}</div>
+          <div className="reigning-meta">Scorecards weren&apos;t recorded this year.</div>
+        </div>
+      ) : (
+        <>
+          <ArchiveStandings standings={a.standings} />
+          <Awards awards={a.awards} final />
+        </>
+      )}
     </main>
   );
 }

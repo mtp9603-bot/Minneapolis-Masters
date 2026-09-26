@@ -22,7 +22,8 @@ export function AdminPanel(props: {
   joinCode: string;
   players: (PlayerRow & { token: string })[];
   scores: ScoreRow[];
-  archives: { year: number; archived_at: string }[];
+  /** manual = champion recorded by hand, with no scorecards */
+  archives: { year: number; champion: string; manual: boolean }[];
 }) {
   const router = useRouter();
   const [preMax, setPreMax] = useState(props.settings.pre_round_max);
@@ -31,7 +32,11 @@ export function AdminPanel(props: {
   const [msg, setMsg] = useState("");
   const [confirm, setConfirm] = useState("");
   const [copied, setCopied] = useState("");
-  const [year, setYear] = useState(String(new Date().getFullYear()));
+  // Default to this year, unless it's already a hand-entered champion (then next year).
+  const [year, setYear] = useState(() => {
+    const now = new Date().getFullYear();
+    return String(props.archives.some((a) => a.year === now && a.manual) ? now + 1 : now);
+  });
   const [archiveFirst, setArchiveFirst] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -73,8 +78,8 @@ export function AdminPanel(props: {
 
   async function archive() {
     const y = Number(year);
-    const exists = props.archives.some((a) => a.year === y);
-    if (exists && !window.confirm(`Replace the saved ${y} results with the current standings?`)) return;
+    const existing = props.archives.find((a) => a.year === y);
+    if (existing && !window.confirm(`${y} is already saved${existing.champion ? ` (champion: ${existing.champion})` : ""}. Replace it with the current standings?`)) return;
     await act(() => archiveYear(y), `Saved ${y} to Past Champions.`);
   }
 
@@ -205,7 +210,7 @@ export function AdminPanel(props: {
 
       <div className="card stack">
         <h2>Past Champions</h2>
-        <p className="small muted" style={{ margin: 0 }}>
+        <p className="small muted" style={{ marginBottom: 0 }}>
           Saves the final standings, every card, and the awards. Do this after you lock scoring. Saving the same year
           again replaces it.
         </p>
@@ -231,7 +236,7 @@ export function AdminPanel(props: {
 
       <div className="card stack">
         <h2>Reset for next year</h2>
-        <p className="small muted" style={{ margin: 0 }}>
+        <p className="small muted" style={{ marginBottom: 0 }}>
           Deletes every player and score, unlocks scoring, and sets the pre-round limit back to 1. Change the tournament
           code above too.
         </p>

@@ -17,7 +17,13 @@ export type ArchivedPlayer = {
   holes: { hole: number; strokes: number | null; drinks: number }[];
 };
 
-export type Archive = { year: number; archived_at: string; standings: ArchivedPlayer[]; awards: Award[] };
+export type Archive = {
+  year: number;
+  archived_at: string;
+  champion_name: string | null;
+  standings: ArchivedPlayer[];
+  awards: Award[];
+};
 
 /** Freeze the current leaderboard, cards, and awards into a plain JSON snapshot. */
 export function buildSnapshot(players: PlayerRow[], scores: ScoreRow[]): { standings: ArchivedPlayer[]; awards: Award[] } {

@@ -214,7 +214,7 @@ export function CardClient(props: {
         </div>
         <div>
           <b>{totals.thru === 18 ? "F" : totals.thru}</b>
-          <small>{totals.thru ? formatToPar(totals.netToPar) + " net" : "Thru"}</small>
+          <small>{totals.thru ? `Thru · ${formatToPar(totals.netToPar)}` : "Thru"}</small>
         </div>
       </div>
 
@@ -264,12 +264,12 @@ export function CardClient(props: {
                   <button className="btn block" onClick={submit} disabled={submitting || waiting > 0}>
                     {submitting ? "Submitting…" : waiting > 0 ? "Waiting for signal to save…" : "Submit card"}
                   </button>
-                  <p className="small muted center" style={{ margin: 0 }}>
+                  <p className="small muted center" style={{ marginBottom: 0 }}>
                     Check every hole first. Once submitted, only the organizer can change it.
                   </p>
                 </>
               ) : (
-                <p className="small muted center" style={{ margin: 0 }}>
+                <p className="small muted center" style={{ marginBottom: 0 }}>
                   {18 - holesDone} hole{18 - holesDone === 1 ? "" : "s"} left before you can submit your card.
                 </p>
               ))}
@@ -343,8 +343,9 @@ function PreRound(props: { value: number; max: number; locked: boolean; onChange
   return (
     <div className="card stack">
       <div className="hole-title">
-        <div className="num">Pre-round</div>
-        <div className="meta">Drinks before you tee off on hole 1</div>
+        <div className="eyebrow">Before you tee off</div>
+        <div className="num word">Pre-round</div>
+        <div className="meta">Drinks before hole 1</div>
       </div>
       <Counter
         label="Pre-round drinks"
@@ -358,7 +359,7 @@ function PreRound(props: { value: number; max: number; locked: boolean; onChange
       <button className="btn block" onClick={props.onNext}>
         Start Hole 1 ›
       </button>
-      <p className="small muted" style={{ margin: 0 }}>
+      <p className="small muted" style={{ marginBottom: 0 }}>
         This page is your personal scorecard. Bookmark it or use Share → Add to Home Screen to get back here.
       </p>
     </div>
@@ -382,9 +383,13 @@ function HoleScreen(props: {
   return (
     <div className="card stack">
       <div className="hole-title">
-        <div className="num">Hole {hole}</div>
-        <div className="meta">
-          Par {par} · {YARDS[hole - 1]} yds
+        <div className="num">
+          <span className="num-label">Hole</span>
+          {hole}
+        </div>
+        <div className="chips">
+          <span className="chip">Par {par}</span>
+          <span className="chip">{YARDS[hole - 1]} yds</span>
         </div>
       </div>
 

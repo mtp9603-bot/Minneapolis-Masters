@@ -1,17 +1,22 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import "@fontsource-variable/inter";
+import "@fontsource/playfair-display/600.css";
+import "@fontsource/playfair-display/700.css";
 import "./globals.css";
+import { TabBar } from "@/components/TabBar";
 
 export const metadata: Metadata = {
   title: "Minneapolis Masters",
   description: "Live scoring for the Minneapolis Masters at Brookview Golf Course",
-  appleWebApp: { capable: true, title: "MPLS Masters", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "MPLS Masters", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#2c6846",
+  viewportFit: "cover",
+  themeColor: "#0f3a2a",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -23,16 +28,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="brand-badge">
               <img src="/logo.png" alt="" />
             </span>
-            <span>
-              <span className="long">Minneapolis</span><span className="short">MPLS</span> <span className="accent">Masters</span>
+            <span className="brand-text">
+              Minneapolis <span className="accent">Masters</span>
             </span>
           </Link>
-          <nav className="nav">
-            <Link href="/me">My Card</Link>
-            <Link href="/leaderboard">Leaderboard</Link>
-          </nav>
         </header>
         {children}
+        <TabBar />
       </body>
     </html>
   );

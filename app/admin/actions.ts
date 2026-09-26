@@ -108,7 +108,13 @@ async function saveArchive(year: number): Promise<Result> {
   const snap = buildSnapshot(players.data as PlayerRow[], scores.data as ScoreRow[]);
   const { error } = await db()
     .from("archives")
-    .upsert({ year, archived_at: new Date().toISOString(), standings: snap.standings, awards: snap.awards });
+    .upsert({
+      year,
+      archived_at: new Date().toISOString(),
+      champion_name: snap.standings.filter((p) => p.position === "1" || p.position === "T1").map((p) => p.name).join(" & ") || null,
+      standings: snap.standings,
+      awards: snap.awards,
+    });
   if (error) return { ok: false, error: "Saving to Past Champions failed." };
   revalidatePath("/history");
   return { ok: true };

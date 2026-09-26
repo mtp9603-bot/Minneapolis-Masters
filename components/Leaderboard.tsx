@@ -62,8 +62,14 @@ export function Leaderboard() {
   return (
     <>
       <div className="spread">
-        <h1>Leaderboard</h1>
-        <span className="small muted">{locked ? "Final" : live ? "● Live" : "Connecting…"}</span>
+        <div>
+          <div className="eyebrow">Brookview · Regulation 18</div>
+          <h1>Leaderboard</h1>
+        </div>
+        <span className={`live-pill ${locked ? "final" : live ? "on" : ""}`}>
+          <i />
+          {locked ? "Final" : live ? "Live" : "Connecting"}
+        </span>
       </div>
       <div className="card" style={{ padding: "8px 10px" }}>
         {!loaded ? (
@@ -85,10 +91,12 @@ export function Leaderboard() {
             <tbody>
               {rows.map((r) => (
                 <Fragment key={r.id}>
-                <tr className={`click ${open === r.id ? "open" : ""} ${r.withdrawn ? "wd" : ""}`} onClick={() => setOpen(open === r.id ? null : r.id)}>
-                  <td className="pos">{r.position}</td>
+                <tr className={`click ${open === r.id ? "open" : ""} ${r.withdrawn ? "wd" : ""} ${r.position === "1" || r.position === "T1" ? "leader" : ""}`} onClick={() => setOpen(open === r.id ? null : r.id)}>
+                  <td className="pos">
+                    <span className="pos-badge">{r.position}</span>
+                  </td>
                   <td>
-                    <span className="name">{r.name}</span> <span className="chev">{open === r.id ? "▾" : "▸"}</span>
+                    <span className="name">{r.name}</span>
                     {r.wonTiebreak && <span className="tb">{describeTiebreak(r.wonTiebreak)}</span>}
                   </td>
                   <td>

@@ -49,7 +49,7 @@ export function JoinForm() {
         <button className="btn block" disabled={busy || !name.trim() || !code.trim()}>
           {busy ? "Joining…" : "Join"}
         </button>
-        <p className="small muted" style={{ margin: 0 }}>
+        <p className="small muted" style={{ marginBottom: 0 }}>
           You'll get a personal scorecard link. Bookmark it or add it to your home screen. It's the only way back to your card.
         </p>
       </form>

@@ -24,10 +24,12 @@ export function ArchiveStandings({ standings }: { standings: ArchivedPlayer[] })
         <tbody>
           {standings.map((r) => (
             <Fragment key={r.id}>
-              <tr className={`click ${open === r.id ? "open" : ""} ${r.withdrawn ? "wd" : ""}`} onClick={() => setOpen(open === r.id ? null : r.id)}>
-                <td className="pos">{r.position}</td>
+              <tr className={`click ${open === r.id ? "open" : ""} ${r.withdrawn ? "wd" : ""} ${r.position === "1" || r.position === "T1" ? "leader" : ""}`} onClick={() => setOpen(open === r.id ? null : r.id)}>
+                <td className="pos">
+                  <span className="pos-badge">{r.position}</span>
+                </td>
                 <td>
-                  <span className="name">{r.name}</span> <span className="chev">{open === r.id ? "▾" : "▸"}</span>
+                  <span className="name">{r.name}</span>
                   {r.tiebreak && <span className="tb">{r.tiebreak}</span>}
                 </td>
                 <td>{r.thru === 18 ? "F" : r.thru || "–"}</td>

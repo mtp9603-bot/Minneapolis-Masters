@@ -11,7 +11,7 @@ Next.js (App Router) + Supabase (Postgres + Realtime), deployed on Vercel.
   - **Submit card.** After all 18 holes, the player taps Submit and their card locks. Admin can reopen it.
 - **Leaderboard (`/leaderboard`)**: live through Supabase Realtime. Tap a name to expand a hole-by-hole breakdown (score, drinks, and net per hole, with Out, In, and Total), with a link to their full scorecard.
 - **Awards**: shown under the leaderboard and updated live: most drinks, best gross, most birdies, worst hole, and any hole in one. Withdrawn players are left out.
-- **Past Champions (`/history`)**: each year's final standings, every card, and the awards.
+- **Past Champions (`/history`)**: the reigning champion plus every past year. Years saved from the app include final standings, every card, and the awards. 2023–2026 are recorded as champion names only.
 - **Admin (`/admin`)**: password-protected. Edit or delete any player, copy a player's personal link, see who hasn't submitted, reopen a card, mark a player withdrawn (WD), set the pre-round limit (1 or 2), change the tournament code, lock scoring, save results to Past Champions, and reset for next year.
 
 Scoring: Net = total strokes − (pre-round drinks + all hole drinks). Lowest net wins. Ties go to more total drinks, then countback on strokes from hole 18 backward. Mid-round, the leaderboard ranks by net relative to par for holes played, so someone thru 4 doesn't lead a player who has finished. Once everyone finishes, that is the same order as raw net.
@@ -27,7 +27,9 @@ Security model: the browser can only **read** players, scores, and settings. Eve
 1. Go to [supabase.com](https://supabase.com), sign in, and click **New project**. Pick any name (e.g. `minneapolis-masters`), set a database password (you won't need it again), and choose a region near Minnesota (e.g. *East US* or *Central US*). Wait for it to finish provisioning.
 2. In the left sidebar, open **SQL Editor** → **New query**.
 3. Open [`supabase/schema.sql`](supabase/schema.sql) from this repo, copy all of it, paste it in, and click **Run**. You should see "Success. No rows returned."
-   - **Already ran `schema.sql` before September 26, 2026?** Don't run it again, because it erases everything. Run [`supabase/migrations/002_submit_withdraw_archive.sql`](supabase/migrations/002_submit_withdraw_archive.sql) instead. It only adds what's new.
+   - **Already ran `schema.sql` before September 26, 2026?** Don't run it again, because it erases everything. Instead, run these files in order. Each one only adds what's new and is safe to run twice:
+     1. [`supabase/migrations/002_submit_withdraw_archive.sql`](supabase/migrations/002_submit_withdraw_archive.sql)
+     2. [`supabase/migrations/003_champion_names.sql`](supabase/migrations/003_champion_names.sql), which adds the 2023–2026 champions
    - The starting tournament code is `BROOKVIEW`. You can change it later on the Admin page.
 4. Open **Project Settings** (gear icon) → **API Keys** and copy three values:
    - **Project URL** (also under **Data API**), e.g. `https://abcd1234.supabase.co`

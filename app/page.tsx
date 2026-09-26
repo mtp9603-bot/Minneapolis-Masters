@@ -1,32 +1,43 @@
-import Link from "next/link";
 import { JoinForm } from "@/components/JoinForm";
-import { COURSE_NAME, COURSE_SUB, TOTAL_PAR, TOTAL_YARDS } from "@/lib/course";
+import { COURSE_NAME, TOTAL_PAR, TOTAL_YARDS } from "@/lib/course";
 
 export default function Home() {
   return (
-    <main className="wrap">
-      <div className="hero">
-        <img src="/logo.png" alt="Minneapolis Masters logo" />
-        <h1>Minneapolis Masters</h1>
-        <div className="muted">{COURSE_NAME}</div>
-        <div className="muted small">
-          {COURSE_SUB} · Par {TOTAL_PAR} · {TOTAL_YARDS.toLocaleString()} yds
+    <>
+      <section className="hero">
+        <div className="medallion">
+          <img src="/logo.png" alt="Minneapolis Masters logo" />
         </div>
-        <div className="tee-stripe" aria-hidden>
-          <span />
-          <span />
-          <span />
+        <div className="eyebrow light">{COURSE_NAME} · Golden Valley, MN</div>
+        <h1 className="hero-title">Minneapolis Masters</h1>
+        <div className="hero-stats">
+          <div>
+            <b>{TOTAL_PAR}</b>
+            <span>Par</span>
+          </div>
+          <div>
+            <b>{TOTAL_YARDS.toLocaleString()}</b>
+            <span>Yards</span>
+          </div>
+          <div>
+            <b>Blue</b>
+            <span>Tees</span>
+          </div>
         </div>
-      </div>
-      <JoinForm />
-      <p className="center small">
-        <Link href="/leaderboard">Leaderboard</Link> · <Link href="/history">Past Champions</Link>
-      </p>
-      <div className="card small muted">
-        <b>How scoring works.</b> Gross is total strokes. Every drink (pre-round plus each hole) takes one stroke
-        off. Lowest net wins. Ties go to the player with more drinks, then countback from hole 18. Pre-round
-        drinks are capped, and holes 17 and 18 allow one drink each.
-      </div>
-    </main>
+      </section>
+      <main className="wrap overlap">
+        <JoinForm />
+        <div className="card rules">
+          <div className="eyebrow">How scoring works</div>
+          <p>
+            Gross is total strokes. Every drink, pre-round and on each hole, takes one stroke off. Lowest net wins.
+          </p>
+          <p>
+            Ties go to the player with more drinks, then countback from hole 18. Pre-round drinks are capped, and
+            holes 17 and 18 allow one drink each.
+          </p>
+        </div>
+      </main>
+    </>
   );
 }

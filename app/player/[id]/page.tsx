@@ -21,7 +21,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   const { data: scores } = await db().from("scores").select("player_id, hole, strokes, drinks").eq("player_id", id);
   return (
     <main className="wrap">
-      <Link href="/leaderboard" className="small">
+      <Link href="/leaderboard" className="back">
         ‹ Leaderboard
       </Link>
       <h1>{player.name}</h1>
