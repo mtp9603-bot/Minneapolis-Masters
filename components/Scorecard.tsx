@@ -46,6 +46,16 @@ function Nine({ start, scores }: { start: number; scores: Map<number, Score> }) 
           ))}
           <td className="tot">{sum((h) => scores.get(h)?.drinks) || ""}</td>
         </tr>
+        <tr>
+          <td>Net</td>
+          {holes.map((h) => {
+            const s = scores.get(h);
+            return <td key={h} style={{ color: "var(--green)", fontWeight: 700 }}>{s?.strokes != null ? s.strokes - s.drinks : ""}</td>;
+          })}
+          <td className="tot" style={{ color: "var(--green)" }}>
+            {holes.some((h) => scores.get(h)?.strokes != null) ? sum((h) => scores.get(h)?.strokes) - sum((h) => scores.get(h)?.drinks) : ""}
+          </td>
+        </tr>
       </tbody>
     </table>
   );

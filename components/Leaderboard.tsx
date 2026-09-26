@@ -1,18 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Fragment } from "react";
 import { browserDb } from "@/lib/supabase-browser";
 import { buildLeaderboard, describeTiebreak, formatToPar } from "@/lib/scoring";
 import type { PlayerRow, ScoreRow } from "@/lib/types";
+import { HoleDetail } from "./HoleDetail";
 
 export function Leaderboard() {
-  const router = useRouter();
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [scores, setScores] = useState<ScoreRow[]>([]);
   const [locked, setLocked] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [live, setLive] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async () => {
@@ -77,10 +78,11 @@ export function Leaderboard() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="click" onClick={() => router.push(`/player/${r.id}`)}>
+                <Fragment key={r.id}>
+                <tr className={`click ${open === r.id ? "open" : ""}`} onClick={() => setOpen(open === r.id ? null : r.id)}>
                   <td className="pos">{r.position}</td>
                   <td>
-                    <span className="name">{r.name}</span>
+                    <span className="name">{r.name}</span> <span className="chev">{open === r.id ? "▾" : "▸"}</span>
                     {r.wonTiebreak && <span className="tb">{describeTiebreak(r.wonTiebreak)}</span>}
                   </td>
                   <td>{r.thru === 18 ? "F" : r.thru || "–"}</td>
@@ -91,6 +93,14 @@ export function Leaderboard() {
                     {r.thru > 0 && r.thru < 18 && <span className="tb" style={{ color: "var(--muted)" }}>{formatToPar(r.netToPar)}</span>}
                   </td>
                 </tr>
+                {open === r.id && (
+                  <tr className="detail">
+                    <td colSpan={6}>
+                      <HoleDetail playerId={r.id} preRound={r.pre_round_drinks} scores={scores.filter((s) => s.player_id === r.id)} />
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -98,7 +108,7 @@ export function Leaderboard() {
       </div>
       <p className="small muted">
         Lowest net wins. Mid-round, players are ranked by net relative to par for the holes they've played. Ties: more
-        drinks, then countback from hole 18.
+        drinks, then countback from hole 18. Tap a name for hole-by-hole detail.
       </p>
     </>
   );

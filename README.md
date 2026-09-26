@@ -7,7 +7,7 @@ Next.js (App Router) + Supabase (Postgres + Realtime), deployed on Vercel.
 
 - **Join (`/`)**: player enters their name and the tournament code and gets a personal link (`/p/<secret>`). The link is saved on the phone, and **My Card** in the header always returns to it.
 - **My Card**: a pre-round drinks screen, then one hole per screen with big +/- buttons. Changes save automatically. Drink caps are enforced in the UI and again on the server and in the database.
-- **Leaderboard (`/leaderboard`)**: live through Supabase Realtime. Tap a player to see their card.
+- **Leaderboard (`/leaderboard`)**: live through Supabase Realtime. Tap a name to expand a hole-by-hole breakdown (score, drinks, and net per hole, with Out, In, and Total), with a link to their full scorecard.
 - **Admin (`/admin`)**: password-protected. Edit or delete any player, copy a player's personal link, set the pre-round limit (1 or 2), change the tournament code, lock scoring, and reset for next year.
 
 Scoring: Net = total strokes − (pre-round drinks + all hole drinks). Lowest net wins. Ties go to more total drinks, then countback on strokes from hole 18 backward. Mid-round, the leaderboard ranks by net relative to par for holes played, so someone thru 4 doesn't lead a player who has finished. Once everyone finishes, that is the same order as raw net.

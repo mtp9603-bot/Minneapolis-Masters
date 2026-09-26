@@ -132,3 +132,19 @@ table { width: 100%; border-collapse: collapse; }
 .edit-grid td { padding: 3px 4px; }
 .edit-grid input { padding: 8px; font-size: 16px; }
 .plist .item { padding: 12px 0; border-top: 1px solid var(--line); }
+
+/* Leaderboard hole-by-hole detail */
+.lb .chev { color: var(--muted); font-size: 12px; }
+.lb tr.open > td { background: var(--green-soft); }
+.lb tr.detail > td { padding: 0 0 12px; border-top: none; text-align: left; background: var(--green-soft); }
+.lb .hd { padding: 0 8px; }
+.lb .hd table { background: #fff; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+.lb .hd th, .lb .hd td { padding: 6px 8px; text-align: center; font-size: 14px; border-top: 1px solid var(--line); }
+.lb .hd th { font-size: 11px; text-transform: uppercase; color: var(--muted); border-top: none; }
+.lb .hd tr > :first-child { text-align: left; font-weight: 700; }
+.lb .hd .sc-strokes { font-weight: 700; }
+.lb .hd .under { color: var(--green); }
+.lb .hd .over { color: var(--red); }
+.lb .hd .hd-net { font-weight: 800; }
+.lb .hd .hd-sub td { background: #fafaf7; font-weight: 700; }
+.lb .hd .hd-total td { background: var(--green-dark); color: #fff; font-weight: 800; }
