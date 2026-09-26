@@ -5,6 +5,10 @@
   --green-soft: #e8f0eb;
   --gold: #f8e34c;
   --flag: #a72517;
+  /* Leaderboard convention: red under par, green even, black over */
+  --under: #b8231a;
+  --even: #2c6846;
+  --over: #16211c;
   --bg: #f7f5ef;
   --card: #ffffff;
   --text: #16211c;
@@ -106,7 +110,7 @@ input[type="text"], input[type="password"], input[type="number"], select {
 .pm:disabled { background: #c9d1cc; }
 .value { font-size: 64px; font-weight: 800; background: none; border: none; color: var(--text); cursor: pointer; padding: 0; }
 .value.unset { color: #b6beb9; }
-.hint { font-size: 13px; color: var(--muted); margin-top: 4px; min-height: 18px; }
+.hint { font-size: 13px; color: var(--muted); margin-top: 12px; min-height: 18px; }
 .navbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .dots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
 .dot { height: 34px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--muted); padding: 0; }
@@ -123,7 +127,8 @@ table { width: 100%; border-collapse: collapse; }
 .lb tr.click:active { background: var(--green-soft); }
 .lb .pos { font-weight: 800; width: 34px; text-align: left; }
 .lb .name { font-weight: 700; }
-.lb .net { font-weight: 800; color: var(--green); font-size: 18px; }
+.lb .net { font-weight: 800; font-size: 18px; }
+.lb .topar { display: block; font-size: 11px; font-weight: 700; }
 .tb { display: block; font-size: 11px; font-weight: 600; color: var(--flag); margin-top: 2px; }
 
 /* Scorecard grid */
@@ -149,9 +154,6 @@ table { width: 100%; border-collapse: collapse; }
 .lb .hd th, .lb .hd td { padding: 6px 8px; text-align: center; font-size: 14px; border-top: 1px solid var(--line); }
 .lb .hd th { font-size: 11px; text-transform: uppercase; color: var(--muted); border-top: none; }
 .lb .hd tr > :first-child { text-align: left; font-weight: 700; }
-.lb .hd .sc-strokes { font-weight: 700; }
-.lb .hd .under { color: var(--green); }
-.lb .hd .over { color: var(--red); }
 .lb .hd .hd-net { font-weight: 800; }
 .lb .hd .hd-sub td { background: #fafaf7; font-weight: 700; }
 .lb .hd .hd-total td { background: var(--green-dark); color: #fff; font-weight: 800; }
@@ -163,3 +165,29 @@ table { width: 100%; border-collapse: collapse; }
 .tee-stripe { display: flex; justify-content: center; gap: 6px; margin: 10px auto 0; }
 .tee-stripe span { width: 36px; height: 6px; border-radius: 2px; background: var(--green); }
 .tee-stripe span:nth-child(2) { background: var(--gold); }
+
+/* To-par colors */
+.under { color: var(--under); }
+.even { color: var(--even); }
+.over { color: var(--over); }
+
+/* Scorecard marks: circles under par, squares over par */
+.mark { display: inline-grid; place-items: center; min-width: 1.75em; height: 1.75em; padding: 0 2px; font-weight: 700; line-height: 1; box-sizing: border-box; }
+.mark.eagle, .mark.birdie { color: var(--under); border: 1.5px solid var(--under); border-radius: 50%; }
+.mark.eagle { box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px var(--under); }
+.mark.par { color: var(--text); }
+.mark.bogey, .mark.double { color: var(--over); border: 1.5px solid var(--over); border-radius: 1px; }
+.mark.double { box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px var(--over); }
+.mark.triple { color: #fff; background: var(--over); border-radius: 1px; }
+.mark-lg { font-size: 1em; min-width: 1.35em; height: 1.35em; border-width: 3px !important; }
+.mark-lg.eagle { box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--under); }
+.mark-lg.double { box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--over); }
+.mark-xs { min-width: 12px; width: 12px; height: 12px; padding: 0; vertical-align: -1px; }
+.mark-xs.eagle, .mark-xs.double { box-shadow: 0 0 0 1px #fff, 0 0 0 2.5px currentColor; }
+.mark-xs.eagle { border-color: var(--under); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); margin: 6px 2px 10px; }
+.legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.kind-eagle, .kind-birdie { color: var(--under); font-weight: 700; }
+.kind-double, .kind-triple { color: var(--over); font-weight: 700; }
+.sc td { height: 30px; }
+.sc .mark { font-size: 12px; }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Fragment } from "react";
 import { browserDb } from "@/lib/supabase-browser";
 import { buildLeaderboard, describeTiebreak, formatToPar } from "@/lib/scoring";
+import { toParClass } from "@/lib/marks";
 import type { PlayerRow, ScoreRow } from "@/lib/types";
 import { HoleDetail } from "./HoleDetail";
 
@@ -89,8 +90,8 @@ export function Leaderboard() {
                   <td>{r.thru ? r.gross : "–"}</td>
                   <td>{r.drinks}</td>
                   <td>
-                    <span className="net">{r.thru ? r.net : "–"}</span>
-                    {r.thru > 0 && r.thru < 18 && <span className="tb" style={{ color: "var(--muted)" }}>{formatToPar(r.netToPar)}</span>}
+                    <span className={`net ${r.thru ? toParClass(r.netToPar) : ""}`}>{r.thru ? r.net : "–"}</span>
+                    {r.thru > 0 && <span className={`topar ${toParClass(r.netToPar)}`}>{formatToPar(r.netToPar)}</span>}
                   </td>
                 </tr>
                 {open === r.id && (

@@ -1,5 +1,7 @@
 import { PARS, YARDS } from "@/lib/course";
 import { computeTotals, type Score } from "@/lib/scoring";
+import { ScoreMark, MarkLegend } from "./ScoreMark";
+import { toParClass } from "@/lib/marks";
 
 function Nine({ start, scores }: { start: number; scores: Map<number, Score> }) {
   const holes = Array.from({ length: 9 }, (_, i) => start + i);
@@ -35,7 +37,7 @@ function Nine({ start, scores }: { start: number; scores: Map<number, Score> }) 
         <tr>
           <td>Score</td>
           {holes.map((h) => (
-            <td key={h} style={{ fontWeight: 700 }}>{scores.get(h)?.strokes ?? ""}</td>
+            <td key={h}>{scores.get(h)?.strokes != null && <ScoreMark strokes={scores.get(h)!.strokes} par={PARS[h - 1]} />}</td>
           ))}
           <td className="tot">{sum((h) => scores.get(h)?.strokes) || ""}</td>
         </tr>
@@ -50,9 +52,9 @@ function Nine({ start, scores }: { start: number; scores: Map<number, Score> }) 
           <td>Net</td>
           {holes.map((h) => {
             const s = scores.get(h);
-            return <td key={h} style={{ color: "var(--green)", fontWeight: 700 }}>{s?.strokes != null ? s.strokes - s.drinks : ""}</td>;
+            return <td key={h} style={{ fontWeight: 700 }}>{s?.strokes != null ? s.strokes - s.drinks : ""}</td>;
           })}
-          <td className="tot" style={{ color: "var(--green)" }}>
+          <td className="tot">
             {holes.some((h) => scores.get(h)?.strokes != null) ? sum((h) => scores.get(h)?.strokes) - sum((h) => scores.get(h)?.drinks) : ""}
           </td>
         </tr>
@@ -68,6 +70,7 @@ export function Scorecard({ preRound, scores }: { preRound: number; scores: Scor
     <div>
       <Nine start={1} scores={map} />
       <Nine start={10} scores={map} />
+      <MarkLegend />
       <table className="sc">
         <tbody>
           <tr>
@@ -84,7 +87,7 @@ export function Scorecard({ preRound, scores }: { preRound: number; scores: Scor
           </tr>
           <tr>
             <td>Net</td>
-            <td className="tot" style={{ color: "var(--green)", fontSize: 16 }}>{t.net}</td>
+            <td className={`tot ${t.thru ? toParClass(t.netToPar) : ""}`} style={{ fontSize: 16 }}>{t.net}</td>
           </tr>
         </tbody>
       </table>

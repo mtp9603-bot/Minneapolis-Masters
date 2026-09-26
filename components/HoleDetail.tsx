@@ -1,13 +1,7 @@
 import Link from "next/link";
 import { PARS } from "@/lib/course";
 import type { Score } from "@/lib/scoring";
-
-function scoreClass(strokes: number | null, par: number) {
-  if (strokes == null) return "";
-  if (strokes < par) return "under";
-  if (strokes > par) return "over";
-  return "";
-}
+import { ScoreMark, MarkLegend } from "./ScoreMark";
 
 /** Hole-by-hole breakdown: score, drinks, and net (strokes − drinks) per hole, with subtotals. */
 export function HoleDetail({ playerId, preRound, scores }: { playerId: string; preRound: number; scores: Score[] }) {
@@ -35,7 +29,9 @@ export function HoleDetail({ playerId, preRound, scores }: { playerId: string; p
         <tr key={h}>
           <td>{h}</td>
           <td className="muted">{PARS[h - 1]}</td>
-          <td className={`sc-strokes ${scoreClass(strokes, PARS[h - 1])}`}>{strokes ?? "–"}</td>
+          <td>
+            <ScoreMark strokes={strokes} par={PARS[h - 1]} />
+          </td>
           <td>{drinks || (strokes != null ? 0 : "–")}</td>
           <td className="hd-net">{strokes != null ? strokes - drinks : "–"}</td>
         </tr>
@@ -87,6 +83,7 @@ export function HoleDetail({ playerId, preRound, scores }: { playerId: string; p
           </tr>
         </tbody>
       </table>
+      <MarkLegend />
       <Link href={`/player/${playerId}`} className="small">
         Full scorecard ›
       </Link>

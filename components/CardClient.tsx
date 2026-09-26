@@ -9,16 +9,11 @@ import { browserDb } from "@/lib/supabase-browser";
 import { saveToken } from "@/lib/local";
 import type { PlayerRow, ScoreRow, Settings } from "@/lib/types";
 import { Scorecard } from "./Scorecard";
+import { ScoreMark } from "./ScoreMark";
+import { scoreKind, scoreName } from "@/lib/marks";
 
 type HoleState = { strokes: number | null; drinks: number };
 
-const SCORE_NAMES: Record<number, string> = { [-3]: "Albatross", [-2]: "Eagle", [-1]: "Birdie", 0: "Par", 1: "Bogey", 2: "Double bogey", 3: "Triple bogey" };
-
-function scoreName(strokes: number, par: number) {
-  if (strokes === 1) return "Hole in one!";
-  const d = strokes - par;
-  return SCORE_NAMES[d] ?? (d > 0 ? `+${d}` : `${d}`);
-}
 
 export function CardClient(props: {
   token: string;
@@ -226,7 +221,7 @@ function Counter(props: {
   onTapValue?: () => void;
   minusDisabled: boolean;
   plusDisabled: boolean;
-  hint?: string;
+  hint?: React.ReactNode;
 }) {
   return (
     <div className="counter">
@@ -298,14 +293,14 @@ function HoleScreen(props: {
 
       <Counter
         label="Strokes"
-        display={base}
+        display={strokes == null ? base : <ScoreMark strokes={strokes} par={par} size="lg" />}
         unset={strokes == null}
         onMinus={() => props.onChange({ strokes: Math.max(MIN_STROKES, base - 1) })}
         onPlus={() => props.onChange({ strokes: Math.min(MAX_STROKES, base + 1) })}
         onTapValue={() => strokes == null && props.onChange({ strokes: par })}
         minusDisabled={locked || (strokes != null && strokes <= MIN_STROKES)}
         plusDisabled={locked || (strokes != null && strokes >= MAX_STROKES)}
-        hint={strokes == null ? "Tap the number to record par" : scoreName(strokes, par)}
+        hint={strokes == null ? "Tap the number to record par" : <span className={`kind-${scoreKind(strokes, par)}`}>{scoreName(strokes, par)}</span>}
       />
 
       <Counter
