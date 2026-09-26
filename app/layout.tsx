@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0b5d3b",
+  themeColor: "#2c6846",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="header">
           <Link href="/" className="brand">
-            Minneapolis <span>Masters</span>
+            <span className="brand-badge">
+              <img src="/logo.png" alt="" />
+            </span>
+            <span>
+              <span className="long">Minneapolis</span><span className="short">MPLS</span> <span className="accent">Masters</span>
+            </span>
           </Link>
           <nav className="nav">
             <Link href="/me">My Card</Link>

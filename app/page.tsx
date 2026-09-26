@@ -4,11 +4,17 @@ import { COURSE_NAME, COURSE_SUB, TOTAL_PAR, TOTAL_YARDS } from "@/lib/course";
 export default function Home() {
   return (
     <main className="wrap">
-      <div className="center" style={{ margin: "12px 0 18px" }}>
+      <div className="hero">
+        <img src="/logo.png" alt="Minneapolis Masters logo" />
         <h1>Minneapolis Masters</h1>
         <div className="muted">{COURSE_NAME}</div>
         <div className="muted small">
           {COURSE_SUB} · Par {TOTAL_PAR} · {TOTAL_YARDS.toLocaleString()} yds
+        </div>
+        <div className="tee-stripe" aria-hidden>
+          <span />
+          <span />
+          <span />
         </div>
       </div>
       <JoinForm />
